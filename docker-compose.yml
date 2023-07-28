@@ -1,0 +1,18 @@
+services:
+  # MQTT broker
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - 0.0.0.0:1883:1883 # mqtt
+      - 0.0.0.0:8080:8080 # ws
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  # Debugging subscriber that prints all channel updates to the console
+  mqtt-subscriber:
+    image: eclipse-mosquitto:2
+    entrypoint: mosquitto_sub -h mosquitto -p 1883 -V mqttv5 -t u8-mqtt/demo-simple/# -q 1 -c -v -i debugging-client
+
+networks:
+  default:
+    name: test

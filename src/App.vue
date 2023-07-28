@@ -1,13 +1,30 @@
 <script setup>
 import { ref } from "vue";
-import u8mqtt from "u8-mqtt";
+import { mqtt_v5 as u8mqtt } from "u8-mqtt";
 
 const messages = ref([]);
+const input = ref(null)
 
-const my_mqtt = u8mqtt().with_websock("wss://test.mosquitto.org:8081");
+const my_mqtt = u8mqtt({
+  log_conn(event) {
+    switch (event) {
+      case 'on_disconnect':
+        console.log('disconnected')
+        break
+      case 'on_live':
+        console.log('async queue started')
+        break
+      case 'on_ready':
+        console.log('connection handshake complete')
+        break
+      default:
+    }
+  }
+}).with_websock("ws://localhost:8080").with_autoreconnect()
 
 async function init() {
   await my_mqtt.connect();
+
   my_mqtt.subscribe_topic("u8-mqtt/demo-simple/:topic", (pkt, params, ctx) => {
     messages.value.push(pkt.json());
   });
@@ -20,6 +37,8 @@ async function publishMessage(message) {
     note: message,
     live: new Date().toISOString(),
   });
+
+  input.value.value = ''
 }
 </script>
 
@@ -37,6 +56,7 @@ async function publishMessage(message) {
     id="prompt"
     type="text"
     @change="publishMessage($event.target.value)"
+    ref="input"
   />
   <ul>
     <li v-for="message in messages" :key="message.live">
