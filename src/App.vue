@@ -23,9 +23,16 @@ const my_mqtt = u8mqtt({
 }).with_websock("ws://localhost:8080").with_autoreconnect()
 
 async function init() {
-  await my_mqtt.connect();
+  await my_mqtt.connect({
+    props: {
+      session_expiry_interval: 5 * 60
+    },
+    flags: {
+      clean_start: false
+    }
+  });
 
-  my_mqtt.subscribe_topic("u8-mqtt/demo-simple/:topic", (pkt, params, ctx) => {
+  my_mqtt.subscribe_topic("u8-mqtt/demo-simple/:topic", { qos: 1 }, (pkt, params, ctx) => {
     messages.value.push(pkt.json());
   });
 }
